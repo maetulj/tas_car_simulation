@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<robot>
+
+    <!-- Inertia of any empty box. -->
+    <macro name="box_inertia" params="mass x y z">
+        <inertia    ixx="${mass*(y*y + z*z)/12}"
+                    ixy = "0"
+                    ixz = "0"
+                    iyy="${mass*(x*x + z*z)/12}"
+                    iyz = "0"
+                    izz="${mass*(x*x + z*z)/12}"
+        />
+    </macro>
+
+    <!-- Inertia of a thin cylinder. -->
+    <macro name="cylinder_inertia" params="mass radius height">
+        <inertia    ixx="${mass * (3 * radius * radius + height * height) / 12}"
+                    ixy = "0"
+                    ixz = "0"
+                    iyy="${mass * (3 * radius * radius + height * height) / 12}"
+                    iyz = "0"
+                    izz="${mass * radius * radius / 2}"
+        />
+    </macro>
+
+    <!-- Null inertial element. This is needed to make the model work with
+       Gazebo. -->
+    <macro name="null_inertial">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.001"/>
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+        </inertial>
+    </macro>
+
+
+<!-- Wheel. -->
+    <!-- Params: 
+        lr_prefix: "left" or "right"
+        fr_prefix: "front" or "rear"
+        lr_position: 1 for right wheel, -1 for left wheel
+    -->
+    <macro name="wheel" params="lr_prefix fr_prefix lr_position wheel_radius wheel_width wheel_mass axle_eff_limit axle_vel_limit">
+
+        <!-- Define the axle carrier (zero inertia). -->
+        <link name="${lr_prefix}_${fr_prefix}_axle_carrier">
+            <null_inertial/>
+        </link>
+
+        <joint name="${lr_prefix}_steering_joint" type="revolute">
+            <axis xyz="0 1 0" />
+            <parent link="${lr_prefix}_steering_link"/>
+            <child link="${lr_prefix}_${fr_prefix}_axle_carrier"/>
+
+            <!-- cant the front wheels to improve traction -->
+            <!--axis xyz="0 ${-lr_position * 0.09950372}  0.99503719"/-->
+            <limit  lower="0" upper="0"
+                    effort="${servo_stall_torque}" velocity="${servo_no_load_speed}" />
+        </joint>
+
+        <link name="${lr_prefix}_${fr_prefix}_wheel">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 ${PI/2} ${PI/2}" />
+                <geometry>
+                    <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 ${PI/2} ${PI/2}" />
+                <geometry>
+                    <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 ${PI/2} ${PI/2}" />
+                <mass value="${wheel_mass}"/>
+                <cylinder_inertia mass="${wheel_mass}" radius="${wheel_radius}" height="${wheel_width}"/>
+            </inertial>
+
+            <max_contacts>1</max_contacts>
+
+            <surface>
+                <contact>
+                    <ode>
+                        <soft_cfm>0.000000001</soft_cfm>
+                        <soft_erp>0.2</soft_erp>
+                        <kp>1e+10</kp>
+                        <kd>10</kd>
+                        <max_vel>0.01</max_vel>
+                        <min_depth>0.005</min_depth>
+                    </ode>
+                </contact>
+            </surface>
+        </link>
+
+        <!-- The left and right axles have the same axis so that identical
+        rotation values cause the wheels to rotate in the same direction. -->
+        <joint name="${lr_prefix}_${fr_prefix}_axle" type="continuous">
+            <axis xyz="0 1 0"/>
+            <!-- parent link="${lr_prefix}_${fr_prefix}_axle_carrier"/-->
+            <parent link="chassis" />
+            <child link="${lr_prefix}_${fr_prefix}_wheel"/>
+            <origin xyz="${wheel_pos} ${lr_position*wheel_width/2 + lr_position*(chassis_width/2)} ${wheel_radius}" rpy="0 0 0" />
+            <limit effort="${axle_eff_limit}" velocity="${axle_vel_limit}"/>
+            <dynamics damping="0.001" friction="0.5"/>
+        </joint>
+
+        <transmission name="${lr_prefix}_${fr_prefix}_axle_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+
+            <joint name="${lr_prefix}_${fr_prefix}_axle">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+            </joint>
+
+            <actuator name="${lr_prefix}_${fr_prefix}_axle_act">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+        <gazebo reference="${lr_prefix}_${fr_prefix}_wheel">
+            <!-- Define friction of the wheel. -->
+            <mu1>0.7</mu1>
+            <mu2>0.75</mu2>
+
+            <!-- Define the material for Gazebo. -->
+            <material name="black" />
+        </gazebo>
+
+    </macro>
+
+
+<!-- Front wheel. -->
+    <macro name="front_wheel" 
+            params="lr_prefix fr_prefix lr_position wheel_radius wheel_width wheel_mass axle_eff_limit axle_vel_limit">
+
+        <!-- The steering link. -->
+        <link name="${lr_prefix}_steering_link">
+            <null_inertial/>
+            <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+        </link>
+
+        <!-- Connect the steering wheel to the chassis. -->
+        <joint name="${lr_prefix}_steering_link_to_chasis" type="fixed">
+            <axis xyz="0 -1 -1" />
+            <parent link="chassis"/>
+            <child link="${lr_prefix}_steering_link"/>
+        </joint>
+
+        <!-- Add the wheel. -->
+        <wheel  lr_prefix="${lr_prefix}"
+                fr_prefix="${fr_prefix}"
+                lr_position="${lr_position}"
+                wheel_radius="${wheel_radius}"
+                wheel_width="${wheel_width}"
+                wheel_mass="${wheel_mass}"
+                axle_eff_limit="${axle_eff_limit}"
+                axle_vel_limit="${axle_vel_limit}"
+        />
+
+        <transmission name="${lr_prefix}_steering_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+
+            <joint name="${lr_prefix}_steering_joint">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+            </joint>
+
+            <actuator name="${lr_prefix}_steering_act">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+
+    </macro>
+
+
+<!-- Rear wheel. -->
+    <macro  name="rear_wheel"
+            params="lr_prefix fr_prefix lr_position fr_reflect tire_width
+                    wheel_mass axle_eff_limit">
+
+        <wheel  lr_prefix="${lr_prefix}"
+                fr_prefix="${fr_prefix}"
+                lr_position="${lr_position}"
+                tire_width="${tire_width}"
+                wheel_mass="${wheel_mass}"
+                axle_eff_limit="${axle_eff_limit}"
+                cant="-0.03"/>
+    </macro>
+
+</robot>

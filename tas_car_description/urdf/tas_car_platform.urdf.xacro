@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<robot name="tas_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- CAR DESCRIPTION -->
+
+        <!-- Physical properties. -->
+        <xacro:property name="degrees_21" value="0.3665191429"/>
+        <xacro:property name="degrees_45" value="0.785398163"/>
+        <xacro:property name="degrees_90" value="1.57079633"/>
+        <xacro:property name="PI" value="3.1415926535897931"/>
+
+        <!-- Chassis. -->
+        <xacro:property name="chassisLength" value="0.358"/>
+        <xacro:property name="chassisWidth" value="0.18"/>
+        <xacro:property name="chassisHeight" value="0.068"/>
+        <xacro:property name="chassisMass" value="3"/>
+
+        <!-- Axle. -->
+        <xacro:property name="axle_length" value="${chassisWidth + 0.02}" />
+        <xacro:property name="axle_radius" value="0.01" />
+        <xacro:property name="axle_mass" value="0.2" />
+
+        <!-- Motors. -->
+        <xacro:property name="front_axle_eff_limit" value="2" />
+        <xacro:property name="rear_axle_eff_limit" value="8" />
+        <xacro:property name="axle_vel_limit" value="100" />
+
+        <!-- These constants are used to simulate a  Savox SV-0235MG servo operated at
+       7.4 V. servo_stall_torque is measured in N m. servo_no_load_speed is
+       measured in rad/s. -->
+        <!-- produces 486.1 oz-in = 3.432620346181713 n-m of torque -->
+        <!-- no load speed 0.13 sec/60 deg -> (1/0.13)*60 deg/sec = 8.05536578 rad/s -->
+        <xacro:property name="servo_stall_torque" value="3.432620346181713" />
+        <xacro:property name="servo_no_load_speed" value="8.05536578" />
+
+        <!-- Wheels. -->
+        <xacro:property name="wheelWidth" value="0.059"/>
+        <xacro:property name="wheelRadius" value="0.0695"/>
+        <xacro:property name="wheelPos" value="0.179"/>
+        <xacro:property name="wheelMass" value="0.5"/>
+
+        <xacro:property name="wheelOffsetX" value="0.179" />
+        <xacro:property name="wheelOffsetY" value="0.1815" />
+
+        <!-- Camera. -->
+        <xacro:property name="cameraSize" value="0.05"/>
+        <xacro:property name="cameraMass" value="0.1"/>
+
+
+        <!-- Include files. -->
+        <xacro:include filename="$(find tas_car_description)/urdf/tas_car.gazebo" />
+        <xacro:include filename="$(find tas_car_description)/urdf/materials.xacro" />
+        <xacro:include filename="$(find tas_car_description)/urdf/macros.xacro" />
+
+        <!-- Robot description. -->
+
+        <!-- The physics engine does not accept a base_link with inertia. Add a simple link without inertia and make a joint between it and the chassis. -->
+        <link name="base_link">
+        </link>
+
+        <joint name="base_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="chassis"/>
+        </joint>
+
+        <link name="chassis">
+            <collision>
+                <origin xyz="0 0 ${wheelRadius}" rpy="0 0 0"/>
+                <geometry>
+                  <box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 ${wheelRadius + chassisHeight/2}" rpy="0 0 0"/>
+                <geometry>
+                    <box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+                </geometry>
+                <material name="orange"/>
+            </visual>
+
+            <inertial>
+                <origin xyz="0 0 ${wheelRadius}" rpy="0 0 0"/>
+                <mass value="${chassisMass}"/>
+                <box_inertia m="${chassisMass}" x="${chassisLength}" y="${chassisWidth}" z="${chassisHeight}"/>
+            </inertial>
+        </link>
+
+        <!-- Create the axles on which we put the wheels. -->
+        <axle fr_prefix="front" fr_position="1" />
+        <axle fr_prefix="rear" fr_position="-1" />
+
+        <front_wheel    lr_prefix="left"
+                        fr_prefix="front"
+                        lr_position="-1" 
+                        fr_position="1" 
+                        wheel_radius="${wheelRadius}" 
+                        wheel_mass="${wheelMass}" 
+                        axle_eff_limit="${front_axle_eff_limit}"
+        />
+
+        <front_wheel    lr_prefix="right"
+                        fr_prefix="front"
+                        lr_position="1" 
+                        fr_position="1" 
+                        wheel_radius="${wheelRadius}" 
+                        wheel_mass="${wheelMass}" 
+                        axle_eff_limit="${front_axle_eff_limit}"
+        />
+
+        <rear_wheel lr_prefix="right"
+                    fr_prefix="rear"
+                    lr_position="1" 
+                    fr_position="-1" 
+                    wheel_radius="${wheelRadius}" 
+                    wheel_mass="${wheelMass}" 
+                    axle_eff_limit="${front_axle_eff_limit}"
+        />
+
+        <rear_wheel lr_prefix="left"
+                    fr_prefix="rear"
+                    lr_position="-1" 
+                    fr_position="-1" 
+                    wheel_radius="${wheelRadius}" 
+                    wheel_mass="${wheelMass}" 
+                    axle_eff_limit="${front_axle_eff_limit}"
+        />
+
+    <!-- CAR DESCRIPTION END -->
+
+    <!-- SENSORS -->
+
+        <!-- Camera. -->
+    <!--
+        <joint name="camera_joint" type="fixed">
+            <origin xyz="${-cameraSize+chassisLength/2} 0 ${cameraSize+wheelRadius+cameraSize/2}" rpy="0 0 0"/>
+            <parent link="chassis"/>
+            <child link="camera"/>
+        </joint>
+
+        <link name="camera">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="${cameraSize} ${cameraSize} ${cameraSize}"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="${cameraSize} ${cameraSize} ${cameraSize}"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+
+            <inertial>
+                <mass value="${cameraMass}" />
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <box_inertia m="${cameraMass}" x="${cameraSize}" y="${cameraSize}" z="${cameraSize}" />
+            </inertial>
+        </link>
+    -->
+
+        <!-- Laser Scanner. -->
+        <joint name="hokuyo_joint" type="fixed">
+            <axis xyz="0 1 0" />
+            <origin xyz="${-cameraSize+chassisLength/2} 0 ${cameraSize+wheelRadius + chassisHeight/2}" rpy="0 0 0"/>
+            <parent link="chassis"/>
+            <child link="hokuyo_link"/>
+        </joint>
+
+        <!-- Hokuyo Laser -->
+        <link name="hokuyo_link">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.1 0.1 0.1"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find tas_car_description)/meshes/hokuyo.dae"/>
+                </geometry>
+            </visual>
+
+            <inertial>
+                <mass value="1e-5" />
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+            </inertial>
+        </link>
+    <!-- SENSOR END -->
+</robot>

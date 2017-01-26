@@ -1,0 +1,28 @@
+<launch>
+
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find tas_car_control)/config/tas_car_control.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <node name="controller_spawner"
+    pkg="controller_manager"
+    type="spawner" respawn="false"
+    output="screen" ns="/tas_car"
+    args="joint_state_controller
+      leftWheel_steering_controller
+      rightWheel_steering_controller
+      left_front_wheel_carrier_controller
+      right_front_wheel_carrier_controller
+      left_rear_wheel_carrier_controller
+      right_rear_wheel_carrier_controller
+      "
+  />
+
+
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find tas_car_description)/urdf/tas_car_platform.urdf.xacro'" />
+    <remap from="/joint_states" to="/tas_car/joint_states" />
+  </node>
+
+</launch>

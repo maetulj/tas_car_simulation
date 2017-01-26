@@ -1,0 +1,41 @@
+tas_car:
+    # Publish all joint states -----------------------------------
+    joint_state_controller:
+        type: joint_state_controller/JointStateController
+        publish_rate: 50  
+      
+
+
+    # Effort Controllers --------------------------------------
+
+    # Steering.
+    leftWheel_steering_controller:
+        type: effort_controllers/JointPositionController
+        joint: front_left_steering_joint
+        pid: {p: 5.0, i: 0.0, d: 0.3}
+
+    rightWheel_steering_controller:
+        type: effort_controllers/JointPositionController
+        joint: front_right_steering_joint
+        pid: {p: 5.0, i: 0.0, d: 0.3}
+
+    # Driving.
+    left_front_wheel_carrier_controller:
+        joint: front_left_wheel_joint
+        type: effort_controllers/JointEffortController
+        pid: {p: 1.5, i: 0.2, d: 0.0, i_clamp: 10.0}
+
+    right_front_wheel_carrier_controller:
+        joint: front_right_wheel_joint
+        type: effort_controllers/JointEffortController
+        pid: {p: 1.5, i: 0.2, d: 0.0, i_clamp: 10.0}
+
+    left_rear_wheel_carrier_controller:
+        joint: rear_left_wheel_axle
+        type: effort_controllers/JointEffortController
+        pid: {p: 1.5, i: 0.5, d: 0.0, i_clamp: 10.0}
+
+    right_rear_wheel_carrier_controller:
+        joint: rear_right_wheel_axle
+        type: effort_controllers/JointEffortController
+        pid: {p: 1.5, i: 0.5, d: 0.0, i_clamp: 10.0}

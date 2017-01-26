@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<robot name="tas_car_platform" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+file: tas_car_platform.urdf.xacro
+author: gsimonic
+
+This file defines the model for the tas_car RC car from LSR.
+
+The measurements are in meters, angles are in radians and masses in kilograms.
+All of these values are just approximations.
+
+For the model to work in Gazebo:
+- all links (even connections) must have an inertial element
+- a link must have a collision element to be visible in Gazebo
+- the link must have a Gazebo material
+
+Macros are defined in "macros.xacro".
+Materials are defined in "materials.xacro".
+Gazebo parameters are defined in "tas_car.gazebo".
+
+This work is open for upgrading.
+Things that need to be improved:
+- vehicle measurements
+- various links
+
+-->
+
+
+<!-- Define parameters. -->
+    <!-- Some degree to radians conversions. -->
+    <xacro:property name="degrees_21" value="0.3665191429"/>
+    <xacro:property name="degrees_45" value="0.785398163"/>
+    <xacro:property name="degrees_90" value="1.57079633"/>
+
+    <xacro:property name="PI" value="3.1415926535897931"/>
+
+    <!-- Chassis. -->
+    <xacro:property name="chassis_length" value="0.358"/>
+    <xacro:property name="chassis_width" value="0.18"/>
+    <xacro:property name="chassis_height" value="0.068"/>
+    <xacro:property name="chassis_mass" value="3"/>
+
+    <!-- Wheels. -->
+    <xacro:property name="wheel_width" value="0.059"/>
+    <xacro:property name="wheel_radius" value="0.0695"/>
+    <xacro:property name="wheel_pos" value="0.179"/>
+    <xacro:property name="wheel_mass" value="0.5"/>
+
+    <xacro:property name="wheel_offset_x" value="0.179" />
+    <xacro:property name="wheel_offset_y" value="0.1815" />
+
+<!-- Some default motor specifications. -->
+    <xacro:property name="front_axle_eff_limit" value="2"/>
+
+    <!-- These constants are used to simulate a  Savox SV-0235MG servo operated at
+       7.4 V. servo_stall_torque is measured in N m. servo_no_load_speed is
+       measured in rad/s. -->
+    <!-- produces 486.1 oz-in = 3.432620346181713 n-m of torque -->
+    <!-- no load speed 0.13 sec/60 deg -> (1/0.13)*60 deg/sec = 8.05536578 rad/s -->
+    <xacro:property name="servo_stall_torque" value="3.432620346181713"/>
+    <xacro:property name="servo_no_load_speed" value="8.05536578"/>
+
+<!-- Include files. -->
+    <xacro:include filename="$(find tas_car_description)/urdf/tas_car.gazebo" />
+    <xacro:include filename="$(find tas_car_description)/urdf/materials.xacro" />
+    <xacro:include filename="$(find tas_car_description)/urdf/macros.xacro" />
+
+<!-- Robot description. -->
+
+    <!-- The physics engine does not accept a base_link with inertia. Add a simple link without inertia and make a joint between it and the chassis. -->
+    <link name="base_link">
+        <!-- Can be empty. -->
+    </link>
+
+    <!-- Chassis -->
+    <link name="chassis">
+        <visual>
+            <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+            </geometry>
+            <material name="chassis_mat"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="${chassis_length} ${chassis_width} ${chassis_width}"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+            <mass value="${chassis_mass}"/>
+            <box_inertia mass="${chassis_mass}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
+        </inertial>
+
+    </link>
+
+    <!-- Connect the base_link to the chassis. -->
+    <joint name="base_link_to_chasis" type="fixed">
+        <parent link="base_link"/>
+        <child link="chassis"/>
+    </joint>
+
+    <!-- Right front wheel. -->
+    <front_wheel    lr_prefix="right"
+                    fr_prefix="front"
+                    lr_position="1"
+                    wheel_radius="${wheel_radius}"
+                    wheel_width="${wheel_width}"
+                    wheel_mass="${wheel_mass}"
+                    axle_eff_limit="${front_axle_eff_limit}"
+                    axle_vel_limit="100"
+    />
+
+    <!-- Left front wheel. -->
+    <front_wheel    lr_prefix="left"
+                    fr_prefix="front"
+                    lr_position="-1"
+                    wheel_radius="${wheel_radius}"
+                    wheel_width="${wheel_width}"
+                    wheel_mass="${wheel_mass}"
+                    axle_eff_limit="${front_axle_eff_limit}"
+                    axle_vel_limit="100"
+    />
+
+</robot>

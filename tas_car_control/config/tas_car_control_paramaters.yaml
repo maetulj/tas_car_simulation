@@ -1,0 +1,22 @@
+# For autonomous driving.
+left_front_wheel:
+  steering_link_name: front_left_wheel
+  steering_controller_name: leftWheel_steering_controller
+  axle_controller_name: left_front_wheel_carrier_controller
+  diameter: 0.19 # TODO
+
+right_front_wheel:
+  steering_link_name: front_right_wheel
+  steering_controller_name: rightWheel_steering_controller
+  axle_controller_name: right_front_wheel_carrier_controller
+  diameter: 0.19 # TODO
+
+left_rear_wheel:
+  link_name: rear_left_wheel
+  axle_controller_name: left_rear_wheel_carrier_controller
+  diameter: 0.19 # TODO
+
+right_rear_wheel:
+  link_name: rear_right_wheel
+  axle_controller_name: right_rear_wheel_carrier_controller
+  diameter: 0.19 # TODO
