@@ -20,7 +20,7 @@ Launch the car simulation in RViz and Gazebo.
         state to tf. -->
         <node   name="robot_state_publisher" 
                 pkg="robot_state_publisher"
-                type="state_publisher">
+                type="robot_state_publisher">
             <param name="publish_frequency" value="50.0"/>
         </node>
     </group>
