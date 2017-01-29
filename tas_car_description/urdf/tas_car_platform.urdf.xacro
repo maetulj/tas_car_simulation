@@ -9,13 +9,13 @@
         <xacro:property name="PI" value="3.1415926535897931"/>
 
         <!-- Chassis. -->
-        <xacro:property name="chassisLength" value="0.358"/>
-        <xacro:property name="chassisWidth" value="0.18"/>
-        <xacro:property name="chassisHeight" value="0.068"/>
-        <xacro:property name="chassisMass" value="3"/>
+        <xacro:property name="chassis_length" value="0.358"/>
+        <xacro:property name="chassis_width" value="0.18"/>
+        <xacro:property name="chassis_height" value="0.068"/>
+        <xacro:property name="chassis_mass" value="3"/>
 
         <!-- Axle. -->
-        <xacro:property name="axle_length" value="${chassisWidth + 0.02}" />
+        <xacro:property name="axle_length" value="${chassis_width + 0.02}" />
         <xacro:property name="axle_radius" value="0.01" />
         <xacro:property name="axle_mass" value="0.2" />
 
@@ -33,10 +33,10 @@
         <xacro:property name="servo_no_load_speed" value="8.05536578" />
 
         <!-- Wheels. -->
-        <xacro:property name="wheelWidth" value="0.059"/>
-        <xacro:property name="wheelRadius" value="0.0695"/>
-        <xacro:property name="wheelPos" value="0.179"/>
-        <xacro:property name="wheelMass" value="0.5"/>
+        <xacro:property name="wheel_width" value="0.059"/>
+        <xacro:property name="wheel_radius" value="0.0695"/>
+        <xacro:property name="wheel_pos" value="0.179"/>
+        <xacro:property name="wheel_mass" value="0.5"/>
 
         <xacro:property name="wheelOffsetX" value="0.179" />
         <xacro:property name="wheelOffsetY" value="0.1815" />
@@ -64,24 +64,24 @@
 
         <link name="chassis">
             <collision>
-                <origin xyz="0 0 ${wheelRadius}" rpy="0 0 0"/>
+                <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
                 <geometry>
-                  <box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+                  <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
                 </geometry>
             </collision>
 
             <visual>
-                <origin xyz="0 0 ${wheelRadius + chassisHeight/2}" rpy="0 0 0"/>
+                <origin xyz="0 0 ${wheel_radius + chassis_height/2}" rpy="0 0 0"/>
                 <geometry>
-                    <box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+                    <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
                 </geometry>
                 <material name="orange"/>
             </visual>
 
             <inertial>
-                <origin xyz="0 0 ${wheelRadius}" rpy="0 0 0"/>
-                <mass value="${chassisMass}"/>
-                <box_inertia m="${chassisMass}" x="${chassisLength}" y="${chassisWidth}" z="${chassisHeight}"/>
+                <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+                <mass value="${chassis_mass}"/>
+                <box_inertia m="${chassis_mass}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
             </inertial>
         </link>
 
@@ -93,8 +93,8 @@
                         fr_prefix="front"
                         lr_position="-1" 
                         fr_position="1" 
-                        wheel_radius="${wheelRadius}" 
-                        wheel_mass="${wheelMass}" 
+                        wheel_radius="${wheel_radius}" 
+                        wheel_mass="${wheel_mass}" 
                         axle_eff_limit="${front_axle_eff_limit}"
         />
 
@@ -102,8 +102,8 @@
                         fr_prefix="front"
                         lr_position="1" 
                         fr_position="1" 
-                        wheel_radius="${wheelRadius}" 
-                        wheel_mass="${wheelMass}" 
+                        wheel_radius="${wheel_radius}" 
+                        wheel_mass="${wheel_mass}" 
                         axle_eff_limit="${front_axle_eff_limit}"
         />
 
@@ -111,8 +111,8 @@
                     fr_prefix="rear"
                     lr_position="1" 
                     fr_position="-1" 
-                    wheel_radius="${wheelRadius}" 
-                    wheel_mass="${wheelMass}" 
+                    wheel_radius="${wheel_radius}" 
+                    wheel_mass="${wheel_mass}" 
                     axle_eff_limit="${front_axle_eff_limit}"
         />
 
@@ -120,8 +120,8 @@
                     fr_prefix="rear"
                     lr_position="-1" 
                     fr_position="-1" 
-                    wheel_radius="${wheelRadius}" 
-                    wheel_mass="${wheelMass}" 
+                    wheel_radius="${wheel_radius}" 
+                    wheel_mass="${wheel_mass}" 
                     axle_eff_limit="${front_axle_eff_limit}"
         />
 
@@ -132,7 +132,7 @@
         <!-- Camera. -->
     <!--
         <joint name="camera_joint" type="fixed">
-            <origin xyz="${-cameraSize+chassisLength/2} 0 ${cameraSize+wheelRadius+cameraSize/2}" rpy="0 0 0"/>
+            <origin xyz="${-cameraSize+chassis_length/2} 0 ${cameraSize+wheel_radius+cameraSize/2}" rpy="0 0 0"/>
             <parent link="chassis"/>
             <child link="camera"/>
         </joint>
@@ -164,7 +164,7 @@
         <!-- Laser Scanner. -->
         <joint name="hokuyo_joint" type="fixed">
             <axis xyz="0 1 0" />
-            <origin xyz="${-cameraSize+chassisLength/2} 0 ${cameraSize+wheelRadius + chassisHeight/2}" rpy="0 0 0"/>
+            <origin xyz="${-cameraSize+chassis_length/2} 0 ${cameraSize+wheel_radius + chassis_height/2}" rpy="0 0 0"/>
             <parent link="chassis"/>
             <child link="hokuyo_link"/>
         </joint>
